@@ -21,21 +21,17 @@ func handleConverteMoedas(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body map[string]float64
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&body)
 
 	valor, ok := body["valor"]
 	if !ok {
-		http.Error(w, "Missing 'valor' field", http.StatusBadRequest)
+		http.Error(w, "É obrigatório enviar um valor", http.StatusBadRequest)
 		return
 	}
 
 	cotacoes, err := resgataCotacaoEuroEDolar()
 	if err != nil {
-		http.Error(w, "Error fetching currency rates", http.StatusInternalServerError)
+		http.Error(w, "Erro ao resgatar cotação de euro e dolar", http.StatusInternalServerError)
 		return
 	}
 
