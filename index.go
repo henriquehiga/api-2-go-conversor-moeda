@@ -51,8 +51,8 @@ func handleConverteMoedas(w http.ResponseWriter, r *http.Request) {
 	resultado := Resposta{
 		Conversao: Conversao{
 			Real:    valor,
-			Dolar:   valor / cotacoes["cotacao_dolar"],
-			Euro:    valor / cotacoes["cotacao_euro"],
+			Dolar:   calculaValorEmReal(valor, cotacoes["cotacao_dolar"]),
+			Euro:    calculaValorEmReal(valor, cotacoes["cotacao_euro"]),
 			Maquina: hostname,
 		},
 	}
