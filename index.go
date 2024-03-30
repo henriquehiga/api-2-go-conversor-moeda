@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,17 @@ import (
 func main() {
 	http.HandleFunc("/converte-moedas", handleConverteMoedas)
 	log.Fatal(http.ListenAndServe(":5000", nil))
+}
+
+type Conversao struct {
+	Dolar   float64 `json:"dolar"`
+	Euro    float64 `json:"euro"`
+	Maquina string  `json:"maquina"`
+	Real    float64 `json:"real"`
+}
+
+type Resposta struct {
+	Conversao Conversao `json:"conversao"`
 }
 
 func handleConverteMoedas(w http.ResponseWriter, r *http.Request) {
@@ -35,11 +47,14 @@ func handleConverteMoedas(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resultado := map[string]float64{
-		"real":    valor,
-		"dolar":   calculaValorEmReal(valor, cotacoes["cotacao_dolar"]),
-		"euro":    calculaValorEmReal(valor, cotacoes["cotacao_euro"]),
-		"maquina": 10,
+	hostname, _ := os.Hostname()
+	resultado := Resposta{
+		Conversao: Conversao{
+			Real:    valor,
+			Dolar:   valor / cotacoes["cotacao_dolar"],
+			Euro:    valor / cotacoes["cotacao_euro"],
+			Maquina: hostname,
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -68,14 +83,11 @@ func resgataCotacaoEuroEDolar() (map[string]float64, error) {
 		return nil, err
 	}
 
-	cotacaoDolar := responseJSON["USDBRL"]["high"]
-	cotacaoEuro := responseJSON["EURBRL"]["high"]
-
-	floatCotacaoDolar, _ := strconv.ParseFloat(strings.TrimSpace(cotacaoDolar), 64)
-	floatCotacaoEuro, _ := strconv.ParseFloat(strings.TrimSpace(cotacaoEuro), 64)
+	cotacaoDolar, _ := strconv.ParseFloat(strings.TrimSpace(responseJSON["USDBRL"]["high"]), 64)
+	cotacaoEuro, _ := strconv.ParseFloat(strings.TrimSpace(responseJSON["EURBRL"]["high"]), 64)
 
 	return map[string]float64{
-		"cotacao_dolar": floatCotacaoDolar,
-		"cotacao_euro":  floatCotacaoEuro,
+		"cotacao_dolar": cotacaoDolar,
+		"cotacao_euro":  cotacaoEuro,
 	}, nil
 }
